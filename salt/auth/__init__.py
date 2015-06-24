@@ -13,7 +13,7 @@ from __future__ import absolute_import
 # 3. Verify with function introspection
 # 4. Execute auth function
 # 5. Cache auth token with relative data opts['token_dir']
-# 6. Interface to verify tokens
+# 6. Interface to verify tokensad
 
 # Import python libs
 from __future__ import print_function
@@ -300,7 +300,6 @@ class Authorize(object):
         him execute "load", this does not deal with conflicting rules
         '''
 
-        adata = self.auth_data
         good = False
         if load.get('token', False):
             for sub_auth in self.token(self.auth_data, load):
