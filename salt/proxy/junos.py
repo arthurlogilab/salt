@@ -8,10 +8,13 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 # Import 3rd-party libs
-import jnpr.junos
-import jnpr.junos.utils
-import jnpr.junos.cfg
-HAS_JUNOS = True
+try:
+    import jnpr.junos
+    import jnpr.junos.utils
+    import jnpr.junos.cfg
+    HAS_JUNOS = True
+except ImportError:
+    HAS_JUNOS = False
 
 __proxyenabled__ = ['junos']
 

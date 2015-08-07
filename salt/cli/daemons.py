@@ -398,7 +398,11 @@ class ProxyMinion(parsers.MinionOptionParser):
 
         NOTE: Run any required code before calling `super()`.
         '''
-        self.prepare(proxydetails)
+        log.debug('[proxy] start')
+        try:
+            self.prepare(proxydetails)
+        except Exception, ex:
+            log.debug('[proxy] {0}'.format(ex))
         try:
             self.minion.tune_in()
             logger.info('The proxy minion is starting up')

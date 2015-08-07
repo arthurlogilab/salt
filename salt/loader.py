@@ -212,11 +212,11 @@ def proxy(opts, functions, whitelist=None):
     Returns the proxy module for this salt-proxy-minion
     '''
     return LazyLoader(_module_dirs(opts, 'proxy', 'proxy'),
-                         opts,
-                         tag='proxy',
-                         whitelist=whitelist,
-                         pack={'__proxy__': functions},
-                         )
+                      opts,
+                      tag='proxy',
+                      whitelist=whitelist,
+                      pack={'__proxy__': functions},
+                      )
 
 
 def returners(opts, functions, whitelist=None):
@@ -744,11 +744,21 @@ class LazyLoader(salt.utils.lazy.LazyDict):
         _generate_module('{0}.ext'.format(self.loaded_base_name))
         _generate_module('{0}.ext.{1}'.format(self.loaded_base_name, tag))
 
+    def __str__(self):
+        strings = []
+        strings.append(super(LazyLoader, self).__str__())
+        strings.append('keys : {0}'.format(self.keys()))
+        strings.append('missing_modules : {0}'.format(self.missing_modules))
+        strings.append('loaded_modules : {0}'.format(self.loaded_modules))
+        strings.append('loaded : {0}'.format(self.loaded))
+        return '|'.join(strings)
+
     def __getattr__(self, mod_name):
         '''
         Allow for "direct" attribute access-- this allows jinja templates to
         access things like `salt.test.ping()`
         '''
+        log.debug('lazyloader here')
         # if we have an attribute named that, lets return it.
         try:
             return object.__getattr__(self, mod_name)
@@ -1053,10 +1063,16 @@ class LazyLoader(salt.utils.lazy.LazyDict):
             if attr.startswith('_'):
                 # private functions are skipped
                 continue
+            # TODO rename func variable since in proxy mode we want to import classes
             func = getattr(mod, attr)
-            if not inspect.isfunction(func):
-                # Not a function!? Skip it!!!
-                continue
+            if self.tag == 'proxy':
+                if not inspect.isclass(func) and not inspect.isfunction(func):
+                    # for proxy import functions AND classes (this logic sux)
+                    continue
+            else:
+                if not inspect.isfunction(func):
+                    # Not a function!? Skip it!!!
+                    continue
             # Let's get the function name.
             # If the module has the __func_alias__ attribute, it must be a
             # dictionary mapping in the form of(key -> value):

@@ -741,12 +741,17 @@ class Minion(MinionBase):
             for p in self.opts['pillar']['proxy']:
                 log.debug('Starting {0} proxy.'.format(p))
                 pid = os.fork()
+                log.debug('[proxy] {0} proxy. pid {1}'.format(p,pid))
                 if pid > 0:
                     continue
                 else:
-                    proxyminion = salt.ProxyMinion()
+                    log.debug('[proxy] before creation {0}'.format(ProxyMinion))
+                    proxyminion = ProxyMinion(self.opts, p)
+                    log.debug('[proxy] created proxyminion {0}'.format(proxyminion))
                     proxyminion.start(self.opts['pillar']['proxy'][p])
+                    log.debug('[proxy] started proxyminion {0}'.format(proxyminion))
                     self.clean_die(signal.SIGTERM, None)
+                    log.debug('[proxy] after clean die {0}'.format(proxyminion))
         else:
             log.debug('I am {0} and I am not supposed to start any proxies. '
                       '(Likely not a problem)'.format(self.opts['id']))
@@ -2894,13 +2899,17 @@ class ProxyMinion(Minion):
     This class instantiates a 'proxy' minion--a minion that does not manipulate
     the host it runs on, but instead manipulates a device that cannot run a minion.
     '''
-    def __init__(self, opts, timeout=60, safe=True):  # pylint: disable=W0231
+    def __init__(self, opts, name, timeout=60, safe=True):  # pylint: disable=W0231
         '''
         Pass in the options dict
         '''
-
+        index = 0
+        log.debug('[proxy] {0}'.format(index))
+        index += 1
         self._running = None
         # Warn if ZMQ < 3.2
+        log.debug('[proxy] {0}'.format(index))
+        index += 1
         if HAS_ZMQ:
             try:
                 zmq_version_info = zmq.zmq_version_info()
@@ -2920,13 +2929,31 @@ class ProxyMinion(Minion):
         # Late setup the of the opts grains, so we can log from the grains
         # module
         # print opts['proxymodule']
-        fq_proxyname = 'proxy.'+opts['proxy']['proxytype']
+        log.debug('[proxy] {0} {1}'.format(index, opts['pillar']['proxy'][name]))
+        index += 1
+        fq_proxyname = 'proxy.'+opts['pillar']['proxy'][name]['proxytype']
+        log.debug('[proxy] {0}'.format(index))
+        index += 1
         self.proxymodule = salt.loader.proxy(opts, fq_proxyname)
-        opts['proxyobject'] = self.proxymodule[opts['proxy']['proxytype']+'.Proxyconn'](opts['proxy'])
+        log.debug('[proxy] {0} {1}'.format(index, self.proxymodule))
+        index += 1
+        log.debug('[proxy] {0} {1}'.format(index, self.proxymodule.loaded_modules['rest_sample'].keys()))
+        index += 1
+        opts['proxyobject'] = self.proxymodule.loaded_modules[opts['pillar']['proxy'][name]['proxytype']]['Proxyconn'](opts['pillar']['proxy'][name])
+        log.debug('[proxy] {0}'.format(index))
+        index += 1
         opts['id'] = opts['proxyobject'].id(opts)
+        log.debug('[proxy] {0}'.format(index))
+        index += 1
         opts.update(resolve_dns(opts))
+        log.debug('[proxy] {0}'.format(index))
+        index += 1
         self.opts = opts
+        log.debug('[proxy] {0}'.format(index))
+        index += 1
         self.authenticate(timeout, safe)
+        log.debug('[proxy] {0} '.format(index))
+        index += 1
         self.opts['pillar'] = salt.pillar.get_pillar(
             opts,
             opts['grains'],
@@ -2944,7 +2971,11 @@ class ProxyMinion(Minion):
             self.functions,
             self.returners)
         self.grains_cache = self.opts['grains']
-        # self._running = True
+        self._running = True
+        log.debug('[proxy] end_init {0} {1}'.format(self._running, self))
+
+    # def start(self, *args, **kwargs):
+    #     log.debug('[proxy] def start {0} {1}'.format(args, kwargs))
 
     def _prep_mod_opts(self):
         '''

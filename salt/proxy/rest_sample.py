@@ -7,6 +7,8 @@ Note this example needs the 'requests' library.
 Requests is not a hard dependency for Salt
 '''
 from __future__ import absolute_import
+import logging
+log = logging.getLogger(__name__)
 
 # Import python libs
 try:
@@ -17,7 +19,7 @@ except ImportError:
 
 HAS_REST_EXAMPLE = True
 
-__proxyenabled__ = ['rest_sample']
+__proxyenabled__ = ['rest_sample', '*']
 
 
 def __virtual__():
@@ -26,7 +28,7 @@ def __virtual__():
     '''
     if not HAS_REQUESTS:
         return False
-
+    return 'rest_sample'
 
 class Proxyconn(object):
     '''
@@ -34,6 +36,7 @@ class Proxyconn(object):
     https://github.com/cro/salt-proxy-rest)
     '''
     def __init__(self, details):
+        log.debug('rest_sample, {0}'.format(details))
         self.url = details['url']
         self.grains_cache = {}
 
@@ -41,6 +44,7 @@ class Proxyconn(object):
         '''
         Return a unique ID for this proxy minion
         '''
+        return 'testid'
         r = requests.get(self.url+'id')
         return r.text.encode('ascii', 'ignore')
 
@@ -131,6 +135,7 @@ class Proxyconn(object):
         '''
         Is the REST server up?
         '''
+        return True
         r = requests.get(self.url+'ping')
         try:
             if r.status_code == 200:
