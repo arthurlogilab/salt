@@ -1462,7 +1462,8 @@ def list_containers(**kwargs):
 
     .. code-block:: bash
 
-        salt myminion docker.inspect_image <image>
+        salt myminion docker.list_containers
+        salt myminion docker.list_containers all=True
     '''
     ret = set()
     for item in six.itervalues(ps_(all=kwargs.get('all', False))):
